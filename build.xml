@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="SambaMetronome" default="dist" basedir=".">
+    <description>
+        SambaMetronome Builder
+    </description>
+  <!-- set global properties for this build -->
+  <property name="src" location="src"/>
+  <property name="resources" location="resources"/>
+  <property name="build" location="build"/>
+  <property name="dist"  location="dist"/>
+  <property name="base"  location="."/>
+  <property name="version" value=".1a"/>
+
+  <target name="init">
+    <!-- Create the time stamp -->
+    <tstamp/>
+    <!-- Create the build directory structure used by compile -->
+    <mkdir dir="${build}"/>
+  </target>
+
+	<target name="buildinfo">
+	    <tstamp>
+	        <format property="buildtime" pattern="MM/dd/yyyy hh:mm aa"/>
+	    </tstamp>        
+	    <propertyfile file="${build}/VERSION.properties" comment="Version Information">
+	        <entry key="version" value="${version}"/>
+	        <entry key="buildtime" value="${buildtime}"/>
+	    </propertyfile>
+	</target>
+  
+  
+  <target name="compile" depends="init, buildinfo"
+        description="compile the source " >
+    <!-- Compile the java code from ${src} into ${build} -->
+    <javac srcdir="${src}" destdir="${build}"/>
+  </target>
+
+  <target name="dist" depends="compile"
+        description="generate the distribution" >
+    <!-- Create the distribution directory -->
+    <mkdir dir="${dist}/lib"/>
+    <mkdir dir="${dist}/config"/>
+
+    <!-- Put everything in ${build} into the metronome.jar file -->
+    <jar jarfile="${dist}/lib/metronome.jar" basedir="${build}"/>
+    <copy file="${resources}/README.txt" todir="${dist}"/>
+    <copy file="${build}/VERSION.properties" todir="${dist}"/>
+    <copy file="${resources}/swing_pattern_input.properties" todir="${dist}/config"/>
+    <copy file="${resources}/straight_pattern_input.properties" todir="${dist}/config"/>
+    <copy file="${resources}/swing_metronome.sh" todir="${dist}"/>
+    <copy file="${resources}/straight_metronome.sh" todir="${dist}"/>
+    <chmod file="${dist}/swing_metronome.sh" perm="ugo+rx"/>
+    <chmod file="${dist}/straight_metronome.sh" perm="ugo+rx"/>
+  </target>
+  
+  <target name="zipdist" description="zip the distribution" depends="dist">
+    <!-- zip the distribution directory -->
+		<tar destfile="${base}/SambaSwingMetronome.tar">
+  			<tarfileset dir="${dist}" filemode="755" prefix="SambaSwingMetronome">
+    			<include name="swing_metronome.sh"/>
+    			<include name="straight_metronome.sh"/>
+  			</tarfileset>
+  			<tarfileset dir="${dist}" prefix="SambaSwingMetronome">
+    			<include name="config/**"/>
+    			<include name="lib/**"/>
+    			<include name="README.txt"/>
+    			<include name="VERSION.properties"/>
+  			</tarfileset>
+		</tar>
+		
+		<gzip destfile="${base}/SambaSwingMetronome.tar.gz" src="${base}/SambaSwingMetronome.tar"/>
+	</target>
+
+  <target name="clean"
+        description="clean up" >
+    <!-- Delete the ${build} and ${dist} directory trees -->
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+    <delete file="${base}/SambaSwingMetronome.tar"/>
+    <delete file="${base}/SambaSwingMetronome.tar.gz"/>
+  </target>
+</project>
